@@ -1,11 +1,18 @@
 ---
 name: html-output
-description: Convert the current plan, spec, design doc, or other markdown context into a single self-contained, share-able HTML file with rich visual structure (tables, SVG diagrams, code blocks, responsive layout, navigation). Use when the user invokes /html-output, asks to "export as HTML", "make a web version", "render this as HTML", "share this as a link", or wants a long plan or spec converted from markdown into something visually scannable.
+description: Convert the current plan, spec, design doc, or conversation context into a single self-contained, share-able HTML file with rich visual structure (tables, SVG diagrams, code blocks, responsive layout, in-page navigation). Supports four output shapes — editorial, technical-doc, dashboard, and slide-deck. Use when the user invokes /html-output, asks to "export as HTML", "render this as HTML", "structure your response as HTML" (Karpathy-style), "make a web version", "share this as a link", "present this as slides / a slideshow / a deck", or wants a long plan or spec converted from markdown into something visually scannable or presentable.
 ---
 
 # html-output
 
-Render the current plan, spec, design doc, or conversation context as **one self-contained HTML file** that conveys the information more densely than markdown can — tables, inline SVG diagrams, semantic structure, in-page navigation, mobile-responsive layout, no external runtime dependencies. Background: Thariq Shihipar, *"Using Claude Code: The Unreasonable Effectiveness of HTML"* — markdown caps out around ~100 lines of readability; HTML scales further and is easy to share.
+Render the current plan, spec, design doc, or conversation context as **one self-contained HTML file** that conveys the information more densely than markdown can — tables, inline SVG diagrams, semantic structure, in-page navigation, mobile-responsive layout, no external runtime dependencies.
+
+**Background.** Two prompts that planted this skill:
+
+- Thariq Shihipar, *"Using Claude Code: The Unreasonable Effectiveness of HTML"* — markdown caps out around ~100 lines of readability; HTML scales further and is easy to share.
+- Andrej Karpathy ([x.com/karpathy/status/2053872850101285137](https://x.com/karpathy/status/2053872850101285137)) — *"at the end of your query ask your LLM to 'structure your response as HTML', then view the generated file in your browser. I've also had some success asking the LLM to present its output as slideshows, etc."*
+
+Both lean on the same observation: a browser-rendered single file delivers more density and shareability than any markdown reader. This skill formalizes the pattern — picks the source, picks the output shape (long-form doc vs. slide deck vs. dashboard), and writes the file.
 
 This skill owns *what* to convert and *where* to put the file. Visual quality (typography, color, motion, layout polish) is delegated to the `frontend-design` skill — if it's installed, treat this skill as composing on top of it. Otherwise default to a clean modern editorial style.
 
@@ -15,11 +22,13 @@ Fire on any of:
 
 - The user types `/html-output` (optionally followed by a path).
 - The user asks to "make this an HTML page", "render as HTML", "export to HTML", "give me a shareable version", "make a web version of this".
+- The user uses the Karpathy phrasing: *"structure your response as HTML"*, *"give me this as HTML"*, *"put this in an HTML file"*.
+- The user asks for a **slideshow / deck**: *"present this as slides"*, *"make a slide deck"*, *"turn this into a slideshow"*, *"give me this as slides"* — route to the deck mode below.
 - The user finishes a long plan / spec / design doc and wants a more readable artifact.
 
 Do **not** fire on:
 
-- Source < 30 lines (ask first — HTML overhead is rarely worth it).
+- Source < 30 lines (ask first — HTML overhead is rarely worth it; a slideshow needs ≥ ~5 logical sections to be worth it).
 - Source is already HTML (refuse, point at the existing file).
 - Live dashboards needing data refresh (out of scope — redirect to a real Next.js page).
 
@@ -46,7 +55,16 @@ Always print the **absolute path** of the written file in the final reply.
 
 Before emitting a single line of HTML, decide:
 
-1. **Visual direction.** Pick one: *editorial* (long-form, prose-heavy), *technical-doc* (API ref / spec), *dashboard* (decision matrices, comparison-heavy), *deck* (slide-like sections). Pick from the source's actual shape, not your favorite default.
+1. **Visual direction.** Pick one of the four modes below from the source's actual shape — not your favorite default. If the user named a shape ("slideshow", "dashboard"), respect it. Otherwise infer from cues:
+
+   | Mode | Pick when… | Hallmarks |
+   |---|---|---|
+   | **editorial** | Long-form prose, narrative arc, ≤ 1 big decision matrix | Wide reading column, generous line-height, drop caps optional, sticky TOC |
+   | **technical-doc** | API ref, schema, spec with many cross-references | Sidebar nav, fixed left rail, prominent code blocks, anchor links on every heading |
+   | **dashboard** | Comparison-heavy: matrices, decision logs, multiple tables | Multi-column grid, scannable cards, sparse prose, KPI-style callouts |
+   | **deck** | User asked for slides, OR source is a sequence of ~5–25 discrete claims/sections each worth its own screen | One section per viewport, scroll-snap, big type (`clamp(2rem, 5vw, 4rem)` for headings), slide counter |
+
+   See [Slideshow / deck mode](#slideshow--deck-mode) below for the specifics when picking *deck*.
 2. **Typography.** System UI stack by default (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`) + a monospace stack for code. Use a CDN font (Google Fonts) **only** if the source clearly calls for one and the user is okay with one network reference.
 3. **Color palette.** 3-5 colors at `:root`: background, text, muted text, primary accent, optional secondary accent. Aim for AA contrast (≥ 4.5:1 body text). Dark mode via `@media (prefers-color-scheme: dark)`.
 4. **Layout.** Single long-scroll with sticky TOC is the safe default. Use tabs only when sections are genuinely independent (e.g. comparing options). Use a deck layout only when the user asks.
@@ -66,13 +84,28 @@ If `frontend-design` skill is available, defer aesthetic decisions to it; this s
 - **Code blocks.** `<pre><code>` with monospace + a subtle background. Minimal syntax highlighting via hand-emitted `<span class="kw|str|cmt|num">` if it adds value; otherwise leave code unhighlighted. **No** Prism.js, highlight.js, or any runtime script for highlighting.
 - **`file://` clean.** The file must open from disk with zero fetches or module imports. No `<script type="module">`, no `import`, no `fetch()`.
 
+## Slideshow / deck mode
+
+When the visual direction is *deck* (user asked for slides, or source is a sequence of discrete claims):
+
+- **One slide per viewport.** Each `<section class="slide">` is `min-height: 100vh`, displayed as a flex container, content vertically centered. Use `scroll-snap-type: y mandatory` on `<main>` and `scroll-snap-align: center` on each slide so scroll/swipe lands cleanly.
+- **Type scale up.** Slide headings around `clamp(2.5rem, 6vw, 5rem)`; body around `clamp(1.125rem, 2vw, 1.5rem)`. A slide should be readable from across a room.
+- **One big claim per slide.** Don't pack four bullet points where one headline plus a sub-line will do. If a section in the source has a list, consider whether each item deserves its own slide.
+- **Slide counter.** Fixed-position bottom-right, e.g. `<div class="counter">3 / 12</div>` — counter values can be hand-emitted; no need for runtime calculation.
+- **Keyboard nav is allowed here.** A small inline `<script>` for arrow-key / space / `j`/`k` navigation that calls `scrollIntoView()` is fine — it's the one place the *no runtime* rule loosens. Still no module imports, no fetches, no external scripts. The file must still work fully if JS is disabled (scroll-snap handles the experience).
+- **Title slide first, summary slide last.** Title slide: H1 + one-line subtitle + author/date footer. Summary slide: the 3–5 key takeaways as a list (this is the one place a list of bullets *is* the right call).
+- **No transitions, no animations** beyond `scroll-behavior: smooth`. Distraction tax outweighs the polish.
+- **Print mode** stacks slides as A4 pages (`@media print { .slide { page-break-after: always; min-height: auto; } }`).
+
+A deck for a 12-section source should land around 30–80 KB. If you're over 100 KB, you've either inlined too much CSS or duplicated content per slide — trim.
+
 ## Required element checklist (for sources ≥ 50 lines)
 
 The output **must** include:
 
-- At least one **table** — decision log, comparison matrix, file-list, schema, etc.
+- At least one **table** — decision log, comparison matrix, file-list, schema, etc. (For deck mode, this can be on a single dedicated "matrix" slide.)
 - At least one **inline SVG diagram** — architecture, data flow, sequence, state machine. Pick whichever the source content actually justifies. No PNG, no Mermaid runtime — emit the SVG directly with proper `<title>` + `<desc>` for accessibility.
-- An **anchor-linked TOC** (sidebar nav or top nav).
+- An **anchor-linked TOC** (sidebar nav, top nav, or — for deck mode — a "contents" slide near the front).
 - A **`<footer>`** with: the source file path, the generation date (ISO), and a small "Generated by html-output" line.
 
 ## Forbidden patterns
@@ -97,6 +130,9 @@ The output **must** include:
 - `/html-output ./project-management/ai-secretary/background-tasks-design.md` — convert that specific file.
 - "Can you make this an HTML page?" (right after writing a long plan) — same as `/html-output`.
 - "Render the SRS as a shareable HTML doc" with a path in context — convert that path.
+- "Structure your response as HTML" at the end of a long answer (Karpathy-style) — synthesize the conversation into an HTML file under `~/.claude/plans/<slug>.html`.
+- "Turn this into a slide deck for the standup" / "Present this as slides" — same source-picking flow, but route to **deck mode**.
+- "Make a slideshow version of the plan I just wrote" — pick the most recent plan file, deck mode.
 
 ## Out of scope (deferred, not denied)
 
