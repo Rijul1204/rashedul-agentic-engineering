@@ -17,6 +17,7 @@ Personal [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, prom
 | [What's here](#whats-here) | Current categories and what's coming |
 | [Skills](#skills) | Drop-in `SKILL.md` folders for Claude Code |
 | [Agents](#agents) | Subagent definitions for delegation |
+| [Automation](#automation) | GitHub Actions for this repo (Cursor PR review) |
 | [Layout](#layout) | Repo structure |
 | [Install](#install) | Symlink or copy into Claude Code |
 | [Notes](#notes) | Variants, naming collisions, one-off files |
@@ -29,6 +30,7 @@ Personal [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, prom
 |---|---|---|
 | **Skills** — Claude Code `SKILL.md` folders | Live | [`skills/`](skills) |
 | **Agents** — subagent definitions for delegation | Live | [`agents/`](agents) |
+| **Automation** — repo CI: Cursor PR review, install scripts | Live | [`.github/`](.github) |
 | **Prompts** — reusable prompts and prompt fragments | Planned | `prompts/` |
 | **Hooks** — Claude Code lifecycle hooks | Planned | `hooks/` |
 | **Configs** — shareable `settings.json` snippets, keybindings | Planned | `configs/` |
@@ -107,6 +109,29 @@ The repo started as a skills-only collection and is expanding into a broader hom
 
 ---
 
+## Automation
+
+The repo ships with one GitHub Actions workflow:
+
+> **[`cursor_review.yml`](.github/workflows/cursor_review.yml)**
+> Runs the [Cursor Agent](https://docs.cursor.com/agents) against every PR diff and posts a single sticky review comment with grade + verdict + action items. Reuses across PRs by updating the existing comment instead of stacking new ones. Supports manual re-trigger via `/cursor-review` comment or `workflow_dispatch`.
+
+**Supporting files:**
+
+| File | Purpose |
+|---|---|
+| [`.github/scripts/install_cursor_agent.sh`](.github/scripts/install_cursor_agent.sh) | Installs the `cursor-agent` CLI on the runner, with checksum verification and caching. |
+| [`.github/cursor-agent-config.env`](.github/cursor-agent-config.env) | Optional version pin and known-good install checksum. |
+| [`.github/instructions/code-review.instructions.md`](.github/instructions/code-review.instructions.md) | The review rubric tailored to this repo — skill frontmatter checks, README link integrity, secret detection, grading scale. Modular `{{MODULE:...}}` references are supported (none used yet). |
+
+> [!IMPORTANT]
+> The workflow needs a `CURSOR_API_KEY` repository secret to call the Cursor Agent API. Until that's set, the workflow runs to completion but the review step fails — set the secret at `Settings → Secrets and variables → Actions → New repository secret` before relying on it.
+
+> [!TIP]
+> To reuse this workflow in another repo: copy `.github/workflows/cursor_review.yml` + `.github/scripts/install_cursor_agent.sh` verbatim, then replace `.github/instructions/code-review.instructions.md` with a rubric tailored to that repo's stack. The workflow file itself is project-agnostic.
+
+---
+
 ## Layout
 
 ```
@@ -117,6 +142,12 @@ skills/
 
 agents/
 └── <agent-name>.md         # YAML frontmatter (name, description, tools, model) + body
+
+.github/
+├── workflows/              # GitHub Actions for this repo
+├── scripts/                # support scripts called by workflows
+├── instructions/           # review rubrics (modular markdown)
+└── cursor-agent-config.env # version pin + install checksum
 ```
 
 Each **skill** is a self-contained folder; the `SKILL.md` carries YAML frontmatter (`name`, `description`) that Claude Code reads on startup; the folder name should match the `name:` field so the `/skill-name` invocation resolves cleanly.
