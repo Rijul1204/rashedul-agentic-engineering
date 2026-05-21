@@ -17,7 +17,7 @@ Personal [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, prom
 | [What's here](#whats-here) | Current categories and what's coming |
 | [Skills](#skills) | Drop-in `SKILL.md` folders for Claude Code |
 | [Agents](#agents) | Subagent definitions for delegation |
-| [Automation](#automation) | GitHub Actions for this repo (Cursor PR review) |
+| [Workflows](#workflows) | Drop-in GitHub Actions templates for other repos |
 | [Layout](#layout) | Repo structure |
 | [Install](#install) | Symlink or copy into Claude Code |
 | [Notes](#notes) | Variants, naming collisions, one-off files |
@@ -30,7 +30,7 @@ Personal [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, prom
 |---|---|---|
 | **Skills** — Claude Code `SKILL.md` folders | Live | [`skills/`](skills) |
 | **Agents** — subagent definitions for delegation | Live | [`agents/`](agents) |
-| **Automation** — repo CI: Cursor PR review, install scripts | Live | [`.github/`](.github) |
+| **Workflows** — drop-in GitHub Actions templates for other repos | Live | [`workflows/`](workflows) |
 | **Prompts** — reusable prompts and prompt fragments | Planned | `prompts/` |
 | **Hooks** — Claude Code lifecycle hooks | Planned | `hooks/` |
 | **Configs** — shareable `settings.json` snippets, keybindings | Planned | `configs/` |
@@ -109,26 +109,16 @@ The repo started as a skills-only collection and is expanding into a broader hom
 
 ---
 
-## Automation
+## Workflows
 
-The repo ships with one GitHub Actions workflow:
+Shareable GitHub Actions templates. Each entry is a self-contained folder mirroring a target repo's `.github/` tree — drop it in with one `cp -R` and it works.
 
-> **[`cursor_review.yml`](.github/workflows/cursor_review.yml)**
-> Runs the [Cursor Agent](https://docs.cursor.com/agents) against every PR diff and posts a single sticky review comment with grade + verdict + action items. Reuses across PRs by updating the existing comment instead of stacking new ones. Supports manual re-trigger via `/cursor-review` comment or `workflow_dispatch`.
+> **[`cursor-review/`](workflows/cursor-review)**
+> Runs the [Cursor Agent](https://docs.cursor.com/agents) against every PR diff and posts a single sticky review comment with grade + verdict + action items. Sticky-comment design means re-runs update the existing comment instead of stacking new ones. Manually re-triggerable via `/cursor-review` comment or `workflow_dispatch`.
+> _Install: see [`workflows/cursor-review/README.md`](workflows/cursor-review/README.md). Requires a `CURSOR_API_KEY` secret on the target repo._
 
-**Supporting files:**
-
-| File | Purpose |
-|---|---|
-| [`.github/scripts/install_cursor_agent.sh`](.github/scripts/install_cursor_agent.sh) | Installs the `cursor-agent` CLI on the runner, with checksum verification and caching. |
-| [`.github/cursor-agent-config.env`](.github/cursor-agent-config.env) | Optional version pin and known-good install checksum. |
-| [`.github/instructions/code-review.instructions.md`](.github/instructions/code-review.instructions.md) | The review rubric tailored to this repo — skill frontmatter checks, README link integrity, secret detection, grading scale. Modular `{{MODULE:...}}` references are supported (none used yet). |
-
-> [!IMPORTANT]
-> The workflow needs a `CURSOR_API_KEY` repository secret to call the Cursor Agent API. Until that's set, the workflow runs to completion but the review step fails — set the secret at `Settings → Secrets and variables → Actions → New repository secret` before relying on it.
-
-> [!TIP]
-> To reuse this workflow in another repo: copy `.github/workflows/cursor_review.yml` + `.github/scripts/install_cursor_agent.sh` verbatim, then replace `.github/instructions/code-review.instructions.md` with a rubric tailored to that repo's stack. The workflow file itself is project-agnostic.
+> [!NOTE]
+> These templates are **not active on this repo** — they live under `workflows/<name>/.github/` (one level down) so GitHub Actions doesn't pick them up here. Copy the inner `.github/` tree into your own repo's root to activate.
 
 ---
 
@@ -143,16 +133,21 @@ skills/
 agents/
 └── <agent-name>.md         # YAML frontmatter (name, description, tools, model) + body
 
-.github/
-├── workflows/              # GitHub Actions for this repo
-├── scripts/                # support scripts called by workflows
-├── instructions/           # review rubrics (modular markdown)
-└── cursor-agent-config.env # version pin + install checksum
+workflows/
+└── <workflow-name>/
+    ├── README.md           # how to install in a target repo
+    └── .github/            # mirror of target repo's .github tree — copy in with one cp -R
+        ├── workflows/<workflow-name>.yml
+        ├── scripts/        # support scripts
+        ├── instructions/   # review rubrics, prompt templates
+        └── *.env           # optional config (version pins, checksums)
 ```
 
 Each **skill** is a self-contained folder; the `SKILL.md` carries YAML frontmatter (`name`, `description`) that Claude Code reads on startup; the folder name should match the `name:` field so the `/skill-name` invocation resolves cleanly.
 
 Each **agent** is a single `.md` file under `agents/`. The frontmatter declares the agent `name`, `description` (used by the parent agent to decide when to delegate), allowed `tools`, and a `model` override.
+
+Each **workflow** lives under `workflows/<workflow-name>/` and contains a complete `.github/` subtree plus a per-workflow `README.md`. The inner `.github/` is intentionally one level down so this repo's own Actions runner ignores it — these are templates, not active workflows.
 
 ---
 
@@ -192,6 +187,7 @@ cp agents/quality-gates.md <project>/.claude/agents/quality-gates.md
 - **No runtime dependencies.** Skills and agents are plain markdown. They're consumed by Claude Code, not executed.
 - **Adding a new skill.** Drop a folder under `skills/`, give it a `SKILL.md` with `name:` and `description:` in frontmatter, link it from the table above.
 - **Adding a new agent.** Drop a `.md` file under `agents/`, give it `name:` / `description:` / `tools:` / `model:` in frontmatter, link it from the [Agents](#agents) section.
+- **Adding a new workflow template.** Create `workflows/<name>/` with a `README.md` and a `.github/` subtree. Keep the inner `.github/` one level down so this repo's own Actions runner ignores it.
 - **Adding a new category.** Create the top-level folder (`prompts/`, `hooks/`, etc.) only when you have real content for it. Update the [What's here](#whats-here) table when you do.
 
 ---
