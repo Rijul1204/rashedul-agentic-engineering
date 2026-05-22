@@ -51,6 +51,10 @@ The repo started as a skills-only collection and is expanding into a broader hom
 > Interview you relentlessly about a plan until each decision is explicit and defensible. Two flavors: a terse short version and a longer workflow-driven version that ends with a decision summary or blocker list.
 > _Trigger: `/grill-me`, "stress-test this plan", "grill me on the design"._
 
+> **[`file-review-dialogue`](skills/file-review-dialogue/SKILL.md)**
+> Coordinate an async file-based design / code review with a peer agent (Codex, another Claude, or a human reviewer) through a shared markdown thread. Seeds the file, drives the pyramid-principle response shape, monitors for peer appends, implements + quality-gates any code change the thread converges on, and detects "Final ACK" close-out.
+> _Trigger: "review this with Codex", "open a peer review thread", "respond to Codex on `<thread>.md`", or naming any `*-review-thread.md` path._
+
 ### Fizzy Kanban toolkit
 
 > **[`fizzy-product-manager`](skills/fizzy-product-manager/SKILL.md)**
