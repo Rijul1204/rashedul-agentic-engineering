@@ -17,6 +17,7 @@ Personal [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, suba
 | [What's here](#whats-here) | Current categories and what's coming |
 | [Skills](#skills) | Drop-in `SKILL.md` folders for Claude Code |
 | [Agents](#agents) | Subagent definitions for delegation |
+| [Prompts](#prompts) | Paste-ready prompt fragments |
 | [Workflows](#workflows) | Drop-in GitHub Actions templates for other repos |
 | [Layout](#layout) | Repo structure |
 | [Install](#install) | How to use these in your own setup |
@@ -30,8 +31,8 @@ Personal [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, suba
 |---|---|---|
 | **Skills** — Claude Code `SKILL.md` folders | Live | [`skills/`](skills) |
 | **Agents** — subagent definitions for delegation | Live | [`agents/`](agents) |
+| **Prompts** — paste-ready prompt fragments | Live | [`prompts/`](prompts) |
 | **Workflows** — drop-in GitHub Actions templates for other repos | Live | [`workflows/`](workflows) |
-| **Prompts** — reusable prompts and prompt fragments | Planned | `prompts/` |
 | **Hooks** — Claude Code lifecycle hooks | Planned | `hooks/` |
 | **Configs** — shareable `settings.json` snippets, keybindings | Planned | `configs/` |
 
@@ -129,6 +130,18 @@ The repo started as a skills-only collection and is expanding into a broader hom
 
 ---
 
+## Prompts
+
+Paste-ready prompt fragments — one rule per file, kebab-case name, body is the prompt text. Drop into a new conversation, the top of a system prompt, or your project's `CLAUDE.md`. See [`prompts/README.md`](prompts/README.md) for the convention.
+
+> **[`pyramid-response`](prompts/pyramid-response.md)**
+> Forces pyramid-principle responses — recommendation in sentences 1-3, justification after. Applies to chat replies, plan files, PR bodies, code-review notes, design docs.
+
+> **[`docs-probe-before-code`](prompts/docs-probe-before-code.md)**
+> Pre-arms a third-party-integration conversation to follow **docs → probe → fixture → code** instead of guessing schemas from training-data memory. Every new call site gets a date-stamped `[Doc check YYYY-MM-DD: <URL>]` comment.
+
+---
+
 ## Workflows
 
 Shareable GitHub Actions templates. Each entry is a self-contained folder mirroring a target repo's `.github/` tree — drop it in with one `cp -R` and it works.
@@ -152,6 +165,10 @@ skills/
 
 agents/
 └── <agent-name>.md         # YAML frontmatter (name, description, tools, model) + body
+
+prompts/
+├── README.md               # category convention
+└── <prompt-name>.md        # optional YAML frontmatter + paste-ready prompt text
 
 workflows/
 └── <workflow-name>/
@@ -226,8 +243,9 @@ Each workflow ships its own install steps — see the per-workflow README:
 - **No runtime dependencies.** Skills and agents are plain markdown. They're consumed by Claude Code, not executed.
 - **Adding a new skill.** Drop a folder under `skills/`, give it a `SKILL.md` with `name:` and `description:` in frontmatter, link it from the table above.
 - **Adding a new agent.** Drop a `.md` file under `agents/`, give it `name:` / `description:` / `tools:` / `model:` in frontmatter, link it from the [Agents](#agents) section.
+- **Adding a new prompt.** Drop a `.md` file under `prompts/`, kebab-case name, body is the prompt text. Optional YAML frontmatter (`name`, `description`). Link from the [Prompts](#prompts) section. See [`prompts/README.md`](prompts/README.md) for the full convention.
 - **Adding a new workflow template.** Create `workflows/<name>/` with a `README.md` and a `.github/` subtree. Keep the inner `.github/` one level down so this repo's own Actions runner ignores it.
-- **Adding a new category.** Create the top-level folder (`prompts/`, `hooks/`, etc.) only when you have real content for it. Update the [What's here](#whats-here) table when you do.
+- **Adding a new category.** Create the top-level folder (`hooks/`, `configs/`, etc.) only when you have real content for it. Update the [What's here](#whats-here) table when you do.
 
 ---
 
