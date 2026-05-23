@@ -206,7 +206,32 @@ Each **workflow** lives under `workflows/<workflow-name>/` and contains a comple
 
 ### Skills and agents
 
-**One-shot install (everything):**
+**Zero-clone install (one-liner):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rijul1204/rashedul-agentic-engineering/main/scripts/bootstrap.sh | bash
+```
+
+Clones to `~/.claude/rashedul-agentic-engineering/` and symlinks every skill + agent into `~/.claude/`. Re-run the same line to update — `bootstrap.sh` detects the existing clone and does `git pull` + re-symlink.
+
+Pass flags through to the installer with `bash -s --`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rijul1204/rashedul-agentic-engineering/main/scripts/bootstrap.sh | bash -s -- --target ~/Projects/foo --only skills
+curl -fsSL https://raw.githubusercontent.com/Rijul1204/rashedul-agentic-engineering/main/scripts/bootstrap.sh | bash -s -- --dry-run
+```
+
+Override the clone location (or the source repo) with environment variables before the pipe:
+
+```bash
+INSTALL_DIR=~/work/agentic-engineering curl -fsSL <bootstrap-url> | bash
+REPO_URL=https://github.com/<fork>/<repo>.git BRANCH=develop curl -fsSL <bootstrap-url> | bash
+```
+
+> [!TIP]
+> Symlinks point back to the cloned repo, so a future `git -C ~/.claude/rashedul-agentic-engineering pull` updates every installed skill in place.
+
+**Already cloned?** Run the installer directly:
 
 ```bash
 ./scripts/install.sh                            # user-scope (~/.claude/), symlink, all categories
@@ -215,7 +240,7 @@ Each **workflow** lives under `workflows/<workflow-name>/` and contains a comple
 ./scripts/install.sh --copy --force             # snapshot copy, overwrite existing
 ```
 
-Run from the repo root. The script symlinks (or copies) every `skills/<name>/` and `agents/*.md` into the target's `.claude/` tree. Existing targets are skipped with a warning unless `--force` is passed.
+The script symlinks (or copies) every `skills/<name>/` and `agents/*.md` into the target's `.claude/` tree. Existing targets are skipped with a warning unless `--force` is passed.
 
 **Per-item install** (when you only want one):
 
