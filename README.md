@@ -56,6 +56,10 @@ The repo started as a skills-only collection and is expanding into a broader hom
 > Coordinate an async file-based design / code review with a peer agent (Codex, another Claude, or a human reviewer) through a shared markdown thread. Seeds the file, drives the pyramid-principle response shape, monitors for peer appends, implements + quality-gates any code change the thread converges on, and detects "Final ACK" close-out.
 > _Trigger: "review this with Codex", "open a peer review thread", "respond to Codex on `<thread>.md`", or naming any `*-review-thread.md` path._
 
+> **[`handoff`](skills/handoff/SKILL.md)**
+> Compact the current conversation into a structured handoff doc in `/tmp/` so a fresh agent can resume the work without losing context. References (never duplicates) PRs / plans / design docs / memory entries; redacts secrets; ships a mandatory "suggested skills" section so the next session re-boots cleanly. Inspired by [Matt Pocock's handoff skill](https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md).
+> _Trigger: `/handoff`, "write a handoff doc", "compact this for another agent", "I'll pick this up tomorrow"._
+
 ### Spec & delivery planning
 
 > **[`srs-documentation`](skills/srs-documentation/SKILL.md)**
