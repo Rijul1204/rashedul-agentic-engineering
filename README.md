@@ -10,6 +10,25 @@ Personal [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, suba
 
 ---
 
+## Peer, not executor
+
+The default mode for an AI coding agent is *execute the user's stated request*. That's the wrong mode when the request itself is underspecified — and underspecification is the norm in real engineering work, not the exception.
+
+The artifacts in this repo are designed to **flip the polarity**: turn the agent from order-taker into a peer programmer who pushes back, asks for explicit answers, surfaces hidden assumptions, and refuses to start work while a load-bearing decision is still in the user's head. The clearest expression is [`grill-me`](skills/grill-me/SKILL.md) — interview the user relentlessly until every branch of the decision tree is resolved — but the same DNA runs through several artifacts here:
+
+| Artifact | How it pushes back |
+|---|---|
+| [`grill-me`](skills/grill-me/SKILL.md) | Interviews you before implementation; refuses to start while decisions are vague. |
+| [`pair-agent-harness`](skills/pair-agent-harness/SKILL.md) | Pairs you with a second AI as Reviewer + Implementor — the Reviewer's whole job is to push back. |
+| [`docs-probe-before-code`](prompts/docs-probe-before-code.md) | Forces *docs → probe → fixture → code* instead of "I think this is the schema." |
+| [`sprint-execution-protocol`](prompts/sprint-execution-protocol.md) | Per-task confidence < 90% triggers a `grill-me` escalation; three review lenses (senior engineer / product / UI-UX) run before any task is declared done. |
+| [`quality-gates`](agents/quality-gates.md) | Refuses to "fix" failing gates by loosening rules — reports only, never bypasses. |
+| [`pyramid-response`](prompts/pyramid-response.md) | Forces the recommendation into sentence 1 instead of meandering. |
+
+**Thesis**: an AI peer that pushes back catches the failure modes an order-taking AI would happily ship. Adopt these artifacts when you'd rather the agent ask "why?" once than implement the wrong thing three times.
+
+---
+
 ## Contents
 
 | Section | Purpose |
@@ -39,25 +58,6 @@ Personal [Claude Code](https://docs.claude.com/en/docs/claude-code) skills, suba
 | **Configs** — shareable `settings.json` snippets, keybindings | Planned | `configs/` |
 
 The repo started as a skills-only collection and is expanding into a broader home for everything I plug into Claude Code. New categories get folders only when I have something to put in them — no empty scaffolding.
-
----
-
-## Peer, not executor
-
-The default mode for an AI coding agent is *execute the user's stated request*. That's the wrong mode when the request itself is underspecified — and underspecification is the norm in real engineering work, not the exception.
-
-The artifacts in this repo are designed to **flip the polarity**: turn the agent from order-taker into a peer programmer who pushes back, asks for explicit answers, surfaces hidden assumptions, and refuses to start work while a load-bearing decision is still in the user's head. The clearest expression is [`grill-me`](skills/grill-me/SKILL.md) — interview the user relentlessly until every branch of the decision tree is resolved — but the same DNA runs through several artifacts here:
-
-| Artifact | How it pushes back |
-|---|---|
-| [`grill-me`](skills/grill-me/SKILL.md) | Interviews you before implementation; refuses to start while decisions are vague. |
-| [`pair-agent-harness`](skills/pair-agent-harness/SKILL.md) | Pairs you with a second AI as Reviewer + Implementor — the Reviewer's whole job is to push back. |
-| [`docs-probe-before-code`](prompts/docs-probe-before-code.md) | Forces *docs → probe → fixture → code* instead of "I think this is the schema." |
-| [`sprint-execution-protocol`](prompts/sprint-execution-protocol.md) | Per-task confidence < 90% triggers a `grill-me` escalation; three review lenses (senior engineer / product / UI-UX) run before any task is declared done. |
-| [`quality-gates`](agents/quality-gates.md) | Refuses to "fix" failing gates by loosening rules — reports only, never bypasses. |
-| [`pyramid-response`](prompts/pyramid-response.md) | Forces the recommendation into sentence 1 instead of meandering. |
-
-**Thesis**: an AI peer that pushes back catches the failure modes an order-taking AI would happily ship. Adopt these artifacts when you'd rather the agent ask "why?" once than implement the wrong thing three times.
 
 ---
 
